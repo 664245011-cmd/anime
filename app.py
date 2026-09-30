@@ -15,6 +15,7 @@ st.markdown("""
 .hero h1{margin:0 0 6px;font-size:2.25rem}.hero p{margin:0;opacity:.85}
 .card{padding:18px;border:1px solid rgba(128,128,128,.22);border-radius:18px;background:rgba(255,255,255,.03);margin-bottom:12px}
 .anime-card{padding:16px 18px;border-radius:16px;border:1px solid rgba(128,128,128,.2);background:linear-gradient(145deg,rgba(99,102,241,.10),rgba(168,85,247,.06));height:100%}
+.rank-card{display:flex;align-items:center;gap:16px;padding:14px 16px;margin:10px 0;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:16px}.rank-no{min-width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#25204d;color:#d8d0ff;font-weight:700}.rank-info{flex:1;min-width:0}.rank-title{font-size:17px;font-weight:700;margin-bottom:4px}.rank-friends{color:#9ca3af;font-size:13px;margin-bottom:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rank-track{height:7px;background:#272a35;border-radius:99px;overflow:hidden}.rank-fill{height:100%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);border-radius:99px}.rank-score{min-width:64px;text-align:right}.rank-score b{display:block;font-size:22px;color:#fff}.rank-score span{color:#9ca3af;font-size:12px}
 .anime-title{font-size:1.08rem;font-weight:700;margin:4px 0 8px}.score{font-size:1.45rem;font-weight:800}
 .small{font-size:.84rem;opacity:.72}.pill{display:inline-block;padding:4px 9px;border-radius:999px;background:rgba(99,102,241,.14);font-size:.78rem;margin-right:5px}
 [data-testid="stMetricValue"]{font-size:1.65rem}
@@ -76,11 +77,25 @@ with tab_rec:
                 friend_text = ", ".join(friends[:3]) if friends else "ยังไม่มีข้อมูล"
                 st.markdown(f'''<div class="anime-card"><span class="pill">{row["anime_id"]}</span><div class="anime-title">🎬 {row["title"]}</div><div class="score">{row["score"]} <span class="small">คะแนน</span></div><div class="small">👥 เพื่อนที่เคยดู: {friend_text}</div></div>''', unsafe_allow_html=True)
         st.write("")
-        st.markdown("### 📊 คะแนนแนะนำ")
-        chart = df[["title", "score"]].set_index("title")
-        _, chart_col, _ = st.columns([1, 2, 1])
-        with chart_col:
-            st.bar_chart(chart, height=190, use_container_width=True)
+        st.markdown("### 📊 อันดับ Anime ที่แนะนำ")
+        st.caption("เรียงตามจำนวนเพื่อนที่คุณเชื่อมโยงด้วยเคยดู Anime เรื่องนั้น")
+        max_score = max(1, int(df["score"].max()))
+        for rank, (_, rec) in enumerate(df.iterrows(), start=1):
+            title = str(rec["title"])
+            score = int(rec["score"])
+            percent = int((score / max_score) * 100)
+            friends = rec.get("watched_by_friends") or []
+            friend_text = ", ".join(friends[:3]) if friends else "ไม่มีข้อมูล"
+            html = f"""<div class="rank-card">
+                <div class="rank-no">#{rank}</div>
+                <div class="rank-info">
+                    <div class="rank-title">🎬 {title}</div>
+                    <div class="rank-friends">👥 เพื่อนที่เคยดู: {friend_text}</div>
+                    <div class="rank-track"><div class="rank-fill" style="width:{percent}%"></div></div>
+                </div>
+                <div class="rank-score"><b>{score}</b><span>คะแนน</span></div>
+            </div>"""
+            st.markdown(html, unsafe_allow_html=True)
 
 with tab_graph:
     st.subheader("🕸️ กราฟความสัมพันธ์ของคุณ")
