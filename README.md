@@ -1,61 +1,51 @@
-# GraphBook Recommendation System
+Anime Recommendation System
 
-โปรเจ็คตัวอย่างระดับปริญญาตรีสำหรับรายวิชา Graph Database / Advanced Database
-พัฒนาด้วย **Streamlit + Neo4j Aura + Cypher** และออกแบบให้ deploy ผ่าน **GitHub → Streamlit Community Cloud** ได้โดยตรง
+โปรเจ็กต์ตัวอย่างสำหรับรายวิชา Graph Database / Advanced Database พัฒนาด้วย Streamlit + Neo4j Aura + Cypher โดยปรับข้อมูลจากระบบต้นแบบให้เป็นระบบแนะนำอนิเมะของโปรเจ็กต์นี้
 
-## 1. แนวคิดของระบบ
+1. แนวคิดของระบบ
 
-ระบบใช้ Property Graph ดังนี้
+ระบบใช้ Property Graph โดยมี Node เพียง 2 ประเภท คือ User และ Anime
 
-```text
-(Student)-[:FRIEND_OF]-(Student)
-(Student)-[:BORROWED {borrow_date, rating}]->(Book)
-(Student)-[:INTERESTED_IN]->(Category)
-(Book)-[:IN_CATEGORY]->(Category)
-(Author)-[:WROTE]->(Book)
-```
+(User)-[:FRIEND_OF]-(User)
+(User)-[:WATCHED {watch_date}]->(Anime)
 
-จุดเด่นคือคำแนะนำอธิบายได้ (Explainable Recommendation) ว่าหนังสือถูกแนะนำเพราะ
-1. เพื่อนของผู้ใช้เคยยืม
-2. หมวดหนังสือตรงกับความสนใจ
-3. หนังสือได้รับความนิยม
-4. หนังสือมีคะแนนเฉลี่ยดี
+จุดเด่นของระบบคือการแนะนำอนิเมะจากเครือข่ายเพื่อน โดยดูว่าเพื่อนของผู้ใช้เคยดูอนิเมะเรื่องใด และผู้ใช้ยังไม่เคยดูเรื่องนั้น
 
-ตัวอย่างคะแนน Hybrid:
+ตัวอย่างแนวคิดคะแนน:
 
-```text
-score = friend_count*3
-      + interest_matches*2
-      + popularity*0.20
-      + average_rating*0.50
-```
+score = จำนวนเพื่อนที่เคยดูอนิเมะเรื่องนั้น
 
 สูตรนี้เป็น heuristic เพื่อการเรียนการสอน ไม่ใช่โมเดล ML ที่ผ่านการ optimize
 
-## 2. โครงสร้างไฟล์
+2. โครงสร้างไฟล์
 
-```text
-book_graph_recommender/
+anime_graph_recommender/
 ├── app.py
 ├── neo4j_service.py
 ├── requirements.txt
-├── .gitignore
-├── .streamlit/
-│   └── secrets.toml.example
-└── cypher/
-    └── schema.cypher
-```
+├── README.md
+└── 664245011_Anime_User.ipynb
 
-## 3. สร้าง Neo4j Aura
+3. โครงสร้างข้อมูล
 
-1. สร้าง AuraDB instance
-2. เก็บค่า Connection URI, username และ password
-3. URI ของ Aura โดยทั่วไปอยู่ในรูป `neo4j+s://...databases.neo4j.io`
-4. อย่านำ password ไปใส่ในไฟล์ที่ commit ขึ้น GitHub
+User
 
-## 4. รันในเครื่อง
+มีตัวอย่าง User 10 คน ได้แก่ Mint, Non, Fah, Ton, Bank, Aom, Beam, Nene, Game และ Palm
 
-```bash
+Anime
+
+มีตัวอย่าง Anime 10 เรื่อง ได้แก่ One Piece, Naruto, Demon Slayer, Attack on Titan, Jujutsu Kaisen, My Hero Academia, Haikyuu!!, Spy x Family, Death Note และ Dragon Ball
+
+Relationship
+
+FRIEND_OF — ความสัมพันธ์ระหว่าง User กับ User
+
+WATCHED — User เคยดู Anime และเก็บ watch_date
+
+ระบบตั้ง Unique Constraint สำหรับ User.user_id และ Anime.anime_id
+
+4. รันในเครื่อง
+
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
@@ -63,71 +53,76 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
-```
-
-คัดลอกไฟล์ตัวอย่าง secrets
-
-```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-```
-
-จากนั้นใส่ credential จริง แล้วรัน
-
-```bash
 streamlit run app.py
-```
 
-## 5. ครั้งแรกที่เปิดระบบ
+5. ครั้งแรกที่เปิดระบบ
 
-1. เข้าเมนู **Admin / Setup**
-2. กด **สร้าง Constraint + Demo Data**
-3. ระบบใช้ `MERGE` จึงกดซ้ำได้โดยไม่สร้าง node ซ้ำจาก key เดิม
-4. จากนั้นทดลอง Dashboard, Recommendations, Search, Borrow/Rate และ Graph Explorer
+ตั้งค่า Neo4j Aura ใน Streamlit Secrets
 
-## 6. Deploy GitHub → Streamlit Community Cloud
+เปิดระบบผ่าน streamlit run app.py
 
-1. สร้าง GitHub repository ใหม่
-2. push ไฟล์ทั้งหมดขึ้น GitHub **ยกเว้น `.streamlit/secrets.toml`**
-3. เข้า Streamlit Community Cloud แล้วเลือก Create app
-4. เลือก repository, branch และ entrypoint = `app.py`
-5. ใน Advanced settings → Secrets ใส่
+หากฐานข้อมูลยังไม่มีข้อมูล ให้กด โหลดข้อมูลตัวอย่าง (10 User / 10 Anime)
 
-```toml
+ทดลองหน้า Anime ที่แนะนำ, โปรไฟล์, ค้นหา Anime, จัดการข้อมูล และกราฟเครือข่าย
+
+ตัวอย่าง Secrets:
+
 [neo4j]
 uri = "neo4j+s://YOUR_INSTANCE.databases.neo4j.io"
 username = "neo4j"
 password = "YOUR_PASSWORD"
 database = "neo4j"
-```
 
-6. Deploy
+อย่านำ password ไปใส่ในไฟล์ที่ commit ขึ้น GitHub
 
-## 7. ประเด็น Graph Database ที่นักศึกษาจะได้ฝึก
+6. การทำงานของระบบแนะนำ
 
-- Node, Label, Property
-- Relationship และ Direction
-- Constraint และ Unique Key
-- `MATCH`, `MERGE`, `OPTIONAL MATCH`, `WITH`, `UNWIND`
-- Graph traversal ผ่านเพื่อน → หนังสือ
-- Aggregation เช่น `count`, `avg`, `collect`
-- Recommendation จาก topology ของกราฟ
-- Parameterized Cypher
-- Python Driver และ connection pooling
-- Streamlit UI
-- Secrets และ cloud deployment
+ระบบจะเลือก Anime ที่ User ยังไม่เคยดู แล้วตรวจสอบเพื่อนของ User ว่าเคยดู Anime เรื่องนั้นหรือไม่ หากมีเพื่อนหลายคนเคยดู จะได้คะแนนสูงขึ้น และแสดงรายชื่อเพื่อนที่เกี่ยวข้องเพื่อช่วยอธิบายคำแนะนำ
 
-## 8. สิ่งที่ปรับปรุงจาก notebook ต้นแบบ
+7. ประเด็น Graph Database ที่ได้ฝึก
 
-- ใช้ label `Student` ให้สอดคล้องทั้งระบบ แทนการปะปน `Student2`/`Student`
-- ใช้ `MERGE` ใน seed data เพื่อรองรับการรันซ้ำ
-- เพิ่ม Unique Constraints
-- ใช้ parameterized Cypher แทนการต่อ string จาก input
-- มอง `FRIEND_OF` เป็นความสัมพันธ์เชิงสมมาตรตอน query ด้วย `-[:FRIEND_OF]-`
-- เพิ่ม Author, Category และ Interest เพื่อให้ recommendation มีมิติด้าน content
-- เพิ่ม rating และ popularity เพื่อสร้าง Hybrid Score
-- แยก database layer (`neo4j_service.py`) ออกจาก UI (`app.py`)
-- ใช้ Streamlit Secrets แทนการ hardcode Aura credential
+Node, Label, Property
 
-## 9. แนวทางต่อยอดเป็นโครงงานนักศึกษา
+Relationship และ Direction
 
-สามารถเพิ่ม Login, Favorite/Wishlist, การคืนหนังสือ, due date, collaborative filtering, Graph Data Science similarity, PageRank, community detection, evaluation metrics เช่น Precision@K/Recall@K และระบบผู้ดูแลได้
+Constraint และ Unique Key
+
+MATCH, MERGE, OPTIONAL MATCH, WITH, UNWIND
+
+Graph traversal ผ่านเพื่อน → Anime
+
+Aggregation เช่น count และ collect
+
+Recommendation จาก topology ของกราฟ
+
+Parameterized Cypher
+
+Python Driver และ connection pooling
+
+Streamlit UI
+
+Secrets และ cloud deployment
+
+8. สิ่งที่ปรับจากระบบต้นแบบ
+
+เปลี่ยนจาก Student / Book เป็น User / Anime
+
+ตัด Author และ Category ออก
+
+ใช้เฉพาะ Node User และ Anime
+
+เปลี่ยน BORROWED เป็น WATCHED
+
+คง FRIEND_OF สำหรับการแนะนำจากเครือข่ายเพื่อน
+
+ใช้ MERGE เพื่อรองรับการรันข้อมูลตัวอย่างซ้ำ
+
+ใช้ Unique Constraints สำหรับ User และ Anime
+
+ใช้ parameterized Cypher
+
+แยก database layer (neo4j_service.py) ออกจาก UI (app.py)
+
+9. Notebook
+
+ไฟล์ 664245011_Anime_User.ipynb ใช้สำหรับสร้างและตรวจสอบ Graph ใน Neo4j โดยเน้นให้เหลือเฉพาะ User และ Anime พร้อมความสัมพันธ์ FRIEND_OF และ WATCHED และมีฟังก์ชันแนะนำ Anime จาก Anime ที่เพื่อนเคยดู
