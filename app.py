@@ -76,8 +76,11 @@ with tab_rec:
                 friend_text = ", ".join(friends[:3]) if friends else "ยังไม่มีข้อมูล"
                 st.markdown(f'''<div class="anime-card"><span class="pill">{row["anime_id"]}</span><div class="anime-title">🎬 {row["title"]}</div><div class="score">{row["score"]} <span class="small">คะแนน</span></div><div class="small">👥 เพื่อนที่เคยดู: {friend_text}</div></div>''', unsafe_allow_html=True)
         st.write("")
+        st.markdown("### 📊 คะแนนแนะนำ")
         chart = df[["title", "score"]].set_index("title")
-        st.bar_chart(chart, height=280)
+        _, chart_col, _ = st.columns([1, 2, 1])
+        with chart_col:
+            st.bar_chart(chart, height=190, use_container_width=True)
 
 with tab_graph:
     st.subheader("🕸️ กราฟความสัมพันธ์ของคุณ")
