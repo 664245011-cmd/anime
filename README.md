@@ -1,4 +1,5 @@
 หน้ารวมงาน https://main011-flzqrvdvjwvmjykj78txqk.streamlit.app/?fbclid=IwY2xjawUseAVleHRuA2FlbQIxMABwZG9mBWJyaWQRMUk2QXlsdUNRb2hsOE9pV2JzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEejVQucUikJpAJtHOvDv4agRU-wVOrDE2D-HDm_BUKR5PYqrehlk_BRyV8I2I_aem_m-v9C1fpFrP_f2ZcE_DHHw
+
 Anime Recommendation System
 
 โปรเจ็กต์ตัวอย่างสำหรับรายวิชา Graph Database / Advanced Database พัฒนาด้วย Streamlit + Neo4j Aura + Cypher โดยปรับข้อมูลจากระบบต้นแบบให้เป็นระบบแนะนำอนิเมะของโปรเจ็กต์นี้
