@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+from textwrap import dedent
 
 from neo4j_service import (
     get_users,
@@ -445,86 +446,38 @@ with tab_rec:
         # =====================================================
         st.write("")
 
-        st.markdown(
-            "### 📊 อันดับ Anime ที่แนะนำ"
-        )
+        st.markdown("### 📊 อันดับ Anime ที่แนะนำ")
 
         st.caption(
             "เรียงตามจำนวนเพื่อนที่คุณเชื่อมโยงด้วย "
             "เคยดู Anime เรื่องนั้น"
         )
 
-        max_score = max(
-            1,
-            int(df["score"].max()),
-        )
+        max_score = max(1, int(df["score"].max()))
 
-        for rank, (_, rec) in enumerate(
-            df.iterrows(),
-            start=1,
-        ):
-            title = str(
-                rec["title"]
-            )
+        for rank, (_, rec) in enumerate(df.iterrows(), start=1):
+            title = str(rec["title"])
+            score = int(rec["score"])
+            percent = max(0, min(100, int((score / max_score) * 100)))
 
-            score = int(
-                rec["score"]
-            )
+            friends = rec.get("watched_by_friends", [])
+            if not isinstance(friends, (list, tuple)):
+                friends = []
+            friend_text = ", ".join(map(str, friends[:3])) if friends else "ไม่มีข้อมูล"
 
-            percent = int(
-                (score / max_score) * 100
-            )
+            # HTML ทั้งก้อนต้องต่อเนื่องกัน ไม่มีบรรทัดว่าง
+            # เพื่อไม่ให้ Streamlit ตีความบางส่วนเป็น Code Block
+            html = f"""<div class="rank-card">
+<div class="rank-no">#{rank}</div>
+<div class="rank-info">
+<div class="rank-title">🎬 {title}</div>
+<div class="rank-friends">👥 เพื่อนที่เคยดู: {friend_text}</div>
+<div class="rank-track"><div class="rank-fill" style="width:{percent}%;"></div></div>
+</div>
+<div class="rank-score"><b>{score}</b><span>คะแนน</span></div>
+</div>"""
 
-            friends = (
-                rec.get(
-                    "watched_by_friends"
-                )
-                or []
-            )
-
-            friend_text = (
-                ", ".join(
-                    friends[:3]
-                )
-                if friends
-                else "ไม่มีข้อมูล"
-            )
-
-            html = f"""
-            <div class="rank-card">
-                <div class="rank-no">
-                    #{rank}
-                </div>
-
-                <div class="rank-info">
-                    <div class="rank-title">
-                        🎬 {title}
-                    </div>
-
-                    <div class="rank-friends">
-                        👥 เพื่อนที่เคยดู:
-                        {friend_text}
-                    </div>
-
-                    <div class="rank-track">
-                        <div
-                            class="rank-fill"
-                            style="width:{percent}%"
-                        ></div>
-                    </div>
-                </div>
-
-                <div class="rank-score">
-                    <b>{score}</b>
-                    <span>คะแนน</span>
-                </div>
-            </div>
-            """
-
-            st.markdown(
-                html,
-                unsafe_allow_html=True,
-            )
+            st.markdown(html, unsafe_allow_html=True)
 
 # =========================================================
 # Anime Graph
