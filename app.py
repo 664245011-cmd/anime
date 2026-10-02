@@ -303,10 +303,25 @@ with st.sidebar:
 
     st.caption("Graph overview")
 
-    st.metric("👤 Users", stats["users"])
-    st.metric("🎬 Anime", stats["anime"])
-    st.metric("🔗 Friendships", stats["friendships"])
-    st.metric("👁 Watched", stats["watched"])
+    st.metric(
+        "👤 Users",
+        stats["users"],
+    )
+
+    st.metric(
+        "🎬 Anime",
+        stats["anime"],
+    )
+
+    st.metric(
+        "🔗 Friendships",
+        stats["friendships"],
+    )
+
+    st.metric(
+        "👁️ Watched",
+        stats["watched"],
+    )
 
 # =========================================================
 # Hero
@@ -354,13 +369,17 @@ with tab_rec:
     st.subheader("✨ Anime ที่น่าจะเหมาะกับคุณ")
 
     st.caption(
-        "คะแนนมาจากจำนวนเพื่อนที่คุณเชื่อมโยงด้วย และเคยดู Anime เรื่องนั้น"
+        "คะแนนมาจากจำนวนเพื่อนที่คุณเชื่อมโยงด้วย "
+        "และเคยดู Anime เรื่องนั้น"
     )
 
     df = pd.DataFrame(recommend_anime(uid, limit))
 
     if df.empty:
-        st.info("ยังไม่มีคำแนะนำสำหรับผู้ใช้นี้ ลองเพิ่ม WATCHED ให้เพื่อนก่อน")
+        st.info(
+            "ยังไม่มีคำแนะนำสำหรับผู้ใช้นี้ "
+            "ลองเพิ่ม WATCHED ให้เพื่อนก่อน"
+        )
     else:
         cols = st.columns(min(3, len(df)))
 
@@ -370,6 +389,7 @@ with tab_rec:
                 title = str(row["title"])
                 score = row["score"]
                 
+                # ดึงรูปจาก ANIME_IMAGES หรือจากข้อมูลใน row
                 image_url = ANIME_IMAGES.get(anime_id) or row.get("image_url")
 
                 friends = row.get("watched_by_friends", [])
@@ -412,7 +432,10 @@ with tab_rec:
 
         st.write("")
         st.markdown("### 📊 อันดับ Anime ที่แนะนำ")
-        st.caption("เรียงตามจำนวนเพื่อนที่คุณเชื่อมโยงด้วย เคยดู Anime เรื่องนั้น")
+        st.caption(
+            "เรียงตามจำนวนเพื่อนที่คุณเชื่อมโยงด้วย "
+            "เคยดู Anime เรื่องนั้น"
+        )
 
         max_score = max(1, int(df["score"].max()))
 
@@ -446,7 +469,11 @@ with tab_rec:
 with tab_graph:
     st.subheader("🕸 กราฟความสัมพันธ์ของคุณ")
 
-    st.caption("โหนดสีม่วง = User · โหนดสีเหลือง = Anime · เส้นแสดง FRIEND_OF / WATCHED")
+    st.caption(
+        "โหนดสีม่วง = User · "
+        "โหนดสีเหลือง = Anime · "
+        "เส้นแสดง FRIEND_OF / WATCHED"
+    )
 
     rows = graph_neighborhood(uid)
 
@@ -471,31 +498,56 @@ with tab_graph:
             ))
 
         def esc(value):
-            return str(value).replace('"', "'")
+            return str(value).replace(
+                '"',
+                "'",
+            )
 
         dot = [
             "graph G {",
             ('graph [rankdir=LR, bgcolor="transparent", pad="0.3"];'),
-            ('node [fontname="Arial", style="filled", color="#cbd5e1", penwidth=1.5];'),
-            ('edge [fontname="Arial", color="#94a3b8", fontcolor="#64748b", penwidth=1.4];'),
+            (
+                'node [fontname="Arial", style="filled", color="#cbd5e1",'
+                " penwidth=1.5];"
+            ),
+            (
+                'edge [fontname="Arial", color="#94a3b8", fontcolor="#64748b",'
+                " penwidth=1.4];"
+            ),
         ]
 
         for node_name, label in nodes.items():
             if label == "User":
                 fill = "#ddd6fe" if node_name != names[uid] else "#a78bfa"
-                dot.append(f'"{esc(node_name)}" [shape=circle, fillcolor="{fill}", label="{esc(node_name)}"];')
+
+                dot.append(
+                    f'"{esc(node_name)}" [shape=circle, fillcolor="{fill}",'
+                    f' label="{esc(node_name)}"];'
+                )
             else:
-                dot.append(f'"{esc(node_name)}" [shape=box, style="rounded,filled", fillcolor="#fef3c7", label="{esc(node_name)}"];')
+                dot.append(
+                    f'"{esc(node_name)}" [shape=box, style="rounded,filled",'
+                    f' fillcolor="#fef3c7", label="{esc(node_name)}"];'
+                )
 
         for source, target, relationship in edges:
-            dot.append(f'"{esc(source)}" -- "{esc(target)}" [label="{esc(relationship)}"];')
+            dot.append(
+                f'"{esc(source)}" -- "{esc(target)}" [label="{esc(relationship)}"];'
+            )
 
         dot.append("}")
 
-        st.graphviz_chart("\n".join(dot), use_container_width=True)
+        st.graphviz_chart(
+            "\n".join(dot),
+            use_container_width=True,
+        )
 
         with st.expander("ดูข้อมูลเส้นความสัมพันธ์"):
-            st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+            st.dataframe(
+                pd.DataFrame(rows),
+                hide_index=True,
+                use_container_width=True,
+            )
 
     else:
         st.info("ยังไม่มีเส้นทางในกราฟ")
@@ -522,8 +574,17 @@ with tab_profile:
         if watched.empty:
             st.info("ยังไม่มีประวัติการดู")
         else:
-            watched = watched.rename(columns={"anime_id": "รหัส", "title": "Anime"})
-            st.dataframe(watched, hide_index=True, use_container_width=True)
+            watched = watched.rename(
+                columns={
+                    "anime_id": "รหัส",
+                    "title": "Anime",
+                }
+            )
+            st.dataframe(
+                watched,
+                hide_index=True,
+                use_container_width=True,
+            )
 
 # =========================================================
 # Search Anime
@@ -531,11 +592,24 @@ with tab_profile:
 with tab_search:
     st.subheader("🔎 ค้นหา Anime")
 
-    keyword = st.text_input("พิมพ์ชื่อ Anime", placeholder="เช่น Naruto, One Piece...")
+    keyword = st.text_input(
+        "พิมพ์ชื่อ Anime",
+        placeholder="เช่น Naruto, One Piece...",
+    )
 
     if keyword.strip():
         result = pd.DataFrame(search_anime(keyword.strip()))
-        st.dataframe(result.rename(columns={"anime_id": "รหัส", "title": "Anime"}), hide_index=True, use_container_width=True)
+
+        st.dataframe(
+            result.rename(
+                columns={
+                    "anime_id": "รหัส",
+                    "title": "Anime",
+                }
+            ),
+            hide_index=True,
+            use_container_width=True,
+        )
     else:
         st.info("พิมพ์ชื่อ Anime เพื่อค้นหา")
 
@@ -546,25 +620,37 @@ with tab_manage:
     st.subheader("⚙ จัดการข้อมูล")
 
     with st.expander("🚀 โหลดข้อมูลตัวอย่าง"):
-        st.write("สร้างข้อมูล User 10 คน, Anime 10 เรื่อง และความสัมพันธ์ สำหรับทดลองระบบ")
+        st.write(
+            "สร้างข้อมูล User 10 คน, Anime 10 เรื่อง และความสัมพันธ์ สำหรับทดลองระบบ"
+        )
 
-        if st.button("โหลด / อัปเดต Demo Data", use_container_width=True):
+        if st.button(
+            "โหลด / อัปเดต Demo Data",
+            use_container_width=True,
+        ):
             seed_demo_data()
             st.success("โหลดข้อมูลเรียบร้อย")
             st.rerun()
 
     st.markdown("---")
 
-    # ดึงรายชื่อ Anime
-    anime_rows = search_anime("")
-    amap = {item["anime_id"]: item["title"] for item in anime_rows} if anime_rows else {}
-
     # 1. บันทึกประวัติการดูสำหรับ User
+    anime_rows = search_anime("")
+    amap = (
+        {item["anime_id"]: item["title"] for item in anime_rows}
+        if anime_rows
+        else {}
+    )
+
     with st.form("watch_form"):
         st.markdown(f"### 📺 เพิ่ม Anime ที่ดูแล้ว (สำหรับ {names[uid]})")
 
         if amap:
-            a = st.selectbox("Anime", list(amap), format_func=lambda x: f"{x} — {amap[x]}")
+            a = st.selectbox(
+                "Anime",
+                list(amap),
+                format_func=lambda x: f"{x} — {amap[x]}",
+            )
         else:
             a = None
             st.info("ยังไม่มีรายการ Anime ในระบบ")
@@ -573,7 +659,11 @@ with tab_manage:
 
         if st.form_submit_button("บันทึก WATCHED", use_container_width=True):
             if a:
-                record_watched(uid, a, str(d))
+                record_watched(
+                    uid,
+                    a,
+                    str(d),
+                )
                 st.success("บันทึกข้อมูลแล้ว")
                 st.rerun()
             else:
@@ -581,12 +671,12 @@ with tab_manage:
 
     st.markdown("---")
 
-    # 2. ระบบจัดการความสัมพันธ์ (สำหรับ Admin)
-    st.markdown("### 🛠️ จัดการความสัมพันธ์")
+    # 2. ระบบจัดการ User และ Anime สำหรับ Admin
+    st.markdown("### 🛠️ จัดการข้อมูล Node & ความสัมพันธ์ ใน Neo4j (สำหรับ Admin)")
 
     admin_pass = st.secrets.get("neo4j", {}).get("ADMIN_PASSWORD", "1234")
     admin_input = st.text_input(
-        "🔑 กรอกรหัสผ่าน Admin เพื่อเปิดเมนูจัดการความสัมพันธ์",
+        "🔑 กรอกรหัสผ่าน Admin เพื่อเปิดเมนูจัดการ Node",
         type="password",
         key="admin_purple_manage_key",
     )
@@ -594,173 +684,156 @@ with tab_manage:
     if admin_input == str(admin_pass):
         st.success("🔓 สิทธิ์ Admin ถูกต้อง")
 
-        rel_tab_add, rel_tab_del, node_tab_add, node_tab_del = st.tabs([
-            "🔗➕ เพิ่มความสัมพันธ์",
-            "🔗🗑 ลบความสัมพันธ์",
-            "➕ เพิ่ม Node (User/Anime)",
-            "🗑 ลบ Node (User/Anime)",
+        tab_add_user, tab_del_user, tab_add_node, tab_del_node = st.tabs([
+            "👤➕ เพิ่ม User ใหม่",
+            "👤🗑 ลบ User ถาวร",
+            "🎬➕ เพิ่ม Anime ใหม่",
+            "🎬🗑 ลบ Anime ถาวร",
         ])
 
-        # =========================================================
-        # TAB 1: เพิ่มความสัมพันธ์ (Add Relationship)
-        # =========================================================
-        with rel_tab_add:
-            st.markdown("#### 🔗 เพิ่มเส้นความสัมพันธ์ใหม่")
-            rel_type = st.radio("ประเภทความสัมพันธ์:", ["FRIEND_OF (ผู้ใช้ ↔ ผู้ใช้)", "WATCHED (ผู้ใช้ → อนิเมะ)"], horizontal=True)
+        # --- 1. เพิ่ม User ใหม่ ---
+        with tab_add_user:
+            with st.form("add_user_form"):
+                st.markdown("#### 👤 1. ข้อมูลผู้ใช้ใหม่")
+                new_uid = st.text_input("User ID (เช่น U011):")
+                new_uname = st.text_input("ชื่อผู้ใช้งาน (เช่น Alice):")
 
-            if "FRIEND_OF" in rel_type:
-                with st.form("add_friend_rel_form"):
-                    col_u1, col_u2 = st.columns(2)
-                    with col_u1:
-                        u1 = st.selectbox("เลือก User ต้นทาง (User 1):", list(names.keys()), format_func=lambda x: f"{names[x]} · {x}", key="rel_u1")
-                    with col_u2:
-                        u2 = st.selectbox("เลือก User ปลายทาง (User 2):", list(names.keys()), format_func=lambda x: f"{names[x]} · {x}", key="rel_u2")
+                st.markdown("#### 🔗 2. เชื่อมความเป็นเพื่อน (FRIEND_OF)")
+                selected_friends = st.multiselect(
+                    "เลือกเพื่อนสนิทในระบบ:",
+                    options=list(names.keys()),
+                    format_func=lambda x: f"{names[x]} · {x}",
+                )
 
-                    if st.form_submit_button("➕ เพิ่มความสัมพันธ์ FRIEND_OF", use_container_width=True):
-                        if u1 == u2:
-                            st.warning("ไม่สามารถสร้างความสัมพันธ์เพื่อนกับตัวเองได้")
-                        else:
-                            q_rel = """
-                            MATCH (u1:User {user_id: $u1})
-                            MATCH (u2:User {user_id: $u2})
+                st.markdown("#### 📺 3. เชื่อมการดูอนิเมะเรื่องเดียวกัน (WATCHED)")
+                selected_animes = st.multiselect(
+                    "เลือก Anime ที่เคยดู:",
+                    options=list(amap.keys()),
+                    format_func=lambda x: f"{x} — {amap[x]}",
+                )
+                watch_date = st.date_input("วันที่ดู", key="new_user_watch_date")
+
+                if st.form_submit_button("➕ บันทึก User ใหม่และเชื่อมความสัมพันธ์", use_container_width=True):
+                    clean_uid = new_uid.strip()
+                    clean_uname = new_uname.strip()
+
+                    if clean_uid and clean_uname:
+                        q_create_user = """
+                        MERGE (u:User {user_id: $uid})
+                        SET u.name = $name
+                        """
+                        query(q_create_user, {"uid": clean_uid, "name": clean_uname}, write=True)
+
+                        for fid in selected_friends:
+                            q_friend = """
+                            MATCH (u1:User {user_id: $uid})
+                            MATCH (u2:User {user_id: $fid})
                             MERGE (u1)-[:FRIEND_OF]->(u2)
                             MERGE (u2)-[:FRIEND_OF]->(u1)
                             """
-                            query(q_rel, {"u1": u1, "u2": u2}, write=True)
-                            st.success(f"เชื่อมความสัมพันธ์ FRIEND_OF ระหว่าง {names[u1]} และ {names[u2]} เรียบร้อย!")
-                            st.rerun()
+                            query(q_friend, {"uid": clean_uid, "fid": fid}, write=True)
 
-            else:  # WATCHED
-                with st.form("add_watched_rel_form"):
-                    col_u, col_a = st.columns(2)
-                    with col_u:
-                        w_uid = st.selectbox("เลือก User:", list(names.keys()), format_func=lambda x: f"{names[x]} · {x}", key="rel_w_uid")
-                    with col_a:
-                        w_aid = st.selectbox("เลือก Anime:", list(amap.keys()), format_func=lambda x: f"{x} — {amap[x]}", key="rel_w_aid")
-                    
-                    w_date = st.date_input("วันที่ดู:", key="rel_w_date")
+                        for aid in selected_animes:
+                            record_watched(clean_uid, aid, str(watch_date))
 
-                    if st.form_submit_button("➕ เพิ่มความสัมพันธ์ WATCHED", use_container_width=True):
-                        record_watched(w_uid, w_aid, str(w_date))
-                        st.success(f"บันทึกความสัมพันธ์ WATCHED ให้ {names[w_uid]} กับ {amap[w_aid]} เรียบร้อย!")
+                        st.success(f"เพิ่มผู้ใช้ {clean_uname} ({clean_uid}) เรียบร้อย!")
                         st.rerun()
-
-        # =========================================================
-        # TAB 2: ลบความสัมพันธ์ (Delete Relationship Only)
-        # =========================================================
-        with rel_tab_del:
-            st.markdown("#### 🔗 ลบเส้นความสัมพันธ์ที่มีอยู่ในระบบ")
-            
-            # ดึงรายการความสัมพันธ์ทั้งหมด
-            q_get_all_rels = """
-            MATCH (a)-[r]->(b)
-            RETURN labels(a)[0] AS source_label, a.user_id AS source_uid, a.name AS source_uname,
-                   type(r) AS rel_type,
-                   labels(b)[0] AS target_label, b.user_id AS target_uid, b.anime_id AS target_aid, b.name AS target_uname, b.title AS target_title
-            """
-            all_rels = query(q_get_all_rels)
-
-            if all_rels:
-                rel_options = []
-                for r in all_rels:
-                    s_name = r["source_uname"] or r["source_uid"]
-                    t_name = r["target_uname"] or r["target_title"] or r["target_aid"] or r["target_uid"]
-                    
-                    if r["rel_type"] == "FRIEND_OF":
-                        rel_str = f"👥 FRIEND_OF: {s_name} ({r['source_uid']}) ↔ {t_name} ({r['target_uid']})"
-                        rel_options.append({"label": rel_str, "type": "FRIEND_OF", "src": r["source_uid"], "tgt": r["target_uid"]})
-                    elif r["rel_type"] == "WATCHED":
-                        rel_str = f"📺 WATCHED: {s_name} ({r['source_uid']}) → {t_name} ({r['target_aid']})"
-                        rel_options.append({"label": rel_str, "type": "WATCHED", "src": r["source_uid"], "tgt": r["target_aid"]})
-
-                # ตัดรายการที่ซ้ำออก (กรณี FRIEND_OF สองทาง)
-                unique_options = {item["label"]: item for item in rel_options}.values()
-                
-                selected_rel_label = st.selectbox(
-                    "เลือกความสัมพันธ์ที่ต้องการลบ:",
-                    [item["label"] for item in unique_options]
-                )
-                
-                selected_item = next(item for item in unique_options if item["label"] == selected_rel_label)
-
-                if st.button("🗑️ ยืนยันลบความสัมพันธ์นี้", type="primary", use_container_width=True):
-                    if selected_item["type"] == "FRIEND_OF":
-                        q_del_rel = """
-                        MATCH (u1:User {user_id: $src})-[r1:FRIEND_OF]-(u2:User {user_id: $tgt})
-                        DELETE r1
-                        """
-                        query(q_del_rel, {"src": selected_item["src"], "tgt": selected_item["tgt"]}, write=True)
                     else:
-                        q_del_rel = """
-                        MATCH (u:User {user_id: $src})-[r:WATCHED]->(a:Anime {anime_id: $tgt})
-                        DELETE r
-                        """
-                        query(q_del_rel, {"src": selected_item["src"], "tgt": selected_item["tgt"]}, write=True)
+                        st.warning("กรุณากรอก User ID และ ชื่อผู้ใช้งาน ให้ครบถ้วน")
 
-                    st.success("ลบเส้นความสัมพันธ์เรียบร้อยแล้ว!")
+        # --- 2. ลบ User ถาวร ---
+        with tab_del_user:
+            if names:
+                del_user_target = st.selectbox(
+                    "เลือก User ที่ต้องการลบ:",
+                    list(names.keys()),
+                    format_func=lambda x: f"{names[x]} · {x}",
+                    key="del_user_select",
+                )
+
+                if st.button("🗑️ ยืนยันลบ User ถาวร", type="primary", use_container_width=True, key="btn_del_user"):
+                    q_del_user = "MATCH (u:User {user_id: $uid}) DETACH DELETE u"
+                    query(q_del_user, {"uid": del_user_target}, write=True)
+                    st.success(f"ลบผู้ใช้ {names[del_user_target]} ({del_user_target}) ออกจากระบบแล้ว!")
                     st.rerun()
             else:
-                st.info("ไม่พบความสัมพันธ์ในฐานข้อมูล")
+                st.info("ไม่มีรายการ User ให้ลบ")
 
-        # =========================================================
-        # TAB 3: เพิ่ม Node (User / Anime)
-        # =========================================================
-        with node_tab_add:
-            st.markdown("#### ➕ เพิ่ม Node เข้าสู่ฐานข้อมูล")
-            node_type = st.radio("ประเภท Node ที่ต้องการเพิ่ม:", ["User (ผู้ใช้)", "Anime (อนิเมะ)"], horizontal=True)
+        # --- 3. เพิ่ม Node Anime (เพิ่มช่องกรอก URL รูปภาพ) ---
+        with tab_add_node:
+            with st.form("add_anime_node_purple"):
+                new_aid = st.text_input("Anime ID (เช่น A011):")
+                new_title = st.text_input("ชื่อเรื่อง Anime:")
+                new_img_url = st.text_input(
+                    "URL รูปภาพหน้าปก (Image URL):", 
+                    placeholder="https://cdn.myanimelist.net/images/anime/...jpg"
+                )
 
-            if "User" in node_type:
-                with st.form("form_add_user_only"):
-                    u_id = st.text_input("User ID (เช่น U011):")
-                    u_name = st.text_input("ชื่อผู้ใช้งาน:")
-                    if st.form_submit_button("➕ บันทึก User", use_container_width=True):
-                        if u_id.strip() and u_name.strip():
-                            q_add_u = "MERGE (u:User {user_id: $uid}) SET u.name = $name"
-                            query(q_add_u, {"uid": u_id.strip(), "name": u_name.strip()}, write=True)
-                            st.success(f"เพิ่ม User {u_name} เรียบร้อยแล้ว!")
-                            st.rerun()
-                        else:
-                            st.warning("กรุณากรอกข้อมูลให้ครบถ้วน")
-            else:
-                with st.form("form_add_anime_only"):
-                    a_id = st.text_input("Anime ID (เช่น A011):")
-                    a_title = st.text_input("ชื่อเรื่อง Anime:")
-                    a_img = st.text_input("URL รูปภาพหน้าปก (Image URL):", placeholder="https://...")
-                    if st.form_submit_button("➕ บันทึก Anime", use_container_width=True):
-                        if a_id.strip() and a_title.strip():
-                            q_add_a = "MERGE (a:Anime {anime_id: $aid}) SET a.title = $title, a.image_url = $img"
-                            query(q_add_a, {"aid": a_id.strip(), "title": a_title.strip(), "img": a_img.strip()}, write=True)
-                            if a_img.strip():
-                                st.session_state["ANIME_IMAGES"][a_id.strip()] = a_img.strip()
-                            st.success(f"เพิ่ม Anime {a_title} เรียบร้อยแล้ว!")
-                            st.rerun()
-                        else:
-                            st.warning("กรุณากรอกข้อมูลให้ครบถ้วน")
+                if st.form_submit_button(
+                    "➕ บันทึกอนิเมะเข้า Neo4j", use_container_width=True
+                ):
+                    clean_aid = new_aid.strip()
+                    clean_title = new_title.strip()
+                    clean_img_url = new_img_url.strip()
 
-        # =========================================================
-        # TAB 4: ลบ Node (User / Anime)
-        # =========================================================
-        with node_tab_del:
-            st.markdown("#### 🗑 ลบ Node ออกจากฐานข้อมูล (ลบพร้อมตัดความสัมพันธ์)")
-            del_type = st.radio("ประเภท Node ที่ต้องการลบ:", ["User (ผู้ใช้)", "Anime (อนิเมะ)"], horizontal=True)
+                    if clean_aid and clean_title:
+                        # บันทึกลงใน Neo4j
+                        q_add = """
+                        MERGE (a:Anime {anime_id: $aid})
+                        SET a.title = $title,
+                            a.image_url = $img_url
+                        """
+                        query(
+                            q_add,
+                            {
+                                "aid": clean_aid, 
+                                "title": clean_title, 
+                                "img_url": clean_img_url
+                            },
+                            write=True,
+                        )
 
-            if "User" in del_type:
-                if names:
-                    del_u = st.selectbox("เลือก User ที่ต้องการลบ:", list(names.keys()), format_func=lambda x: f"{names[x]} · {x}")
-                    if st.button("🗑️ ยืนยันลบ User ถาวร", type="primary", use_container_width=True):
-                        query("MATCH (u:User {user_id: $uid}) DETACH DELETE u", {"uid": del_u}, write=True)
-                        st.success("ลบ User เรียบร้อยแล้ว!")
+                        # อัปเดตใน Dictionary รูปภาพ
+                        if clean_img_url:
+                            st.session_state["ANIME_IMAGES"][clean_aid] = clean_img_url
+
+                        st.success(
+                            f"เพิ่มอนิเมะ '{clean_title}' ({clean_aid}) เรียบร้อยแล้ว!"
+                        )
                         st.rerun()
+                    else:
+                        st.warning("กรุณากรอกข้อมูล ID และชื่อเรื่องให้ครบถ้วน")
+
+        # --- 4. ลบ Node Anime ---
+        with tab_del_node:
+            if amap:
+                del_target = st.selectbox(
+                    "เลือก Anime ที่ต้องการลบ:",
+                    list(amap),
+                    format_func=lambda x: f"{x} — {amap[x]}",
+                    key="del_anime_select",
+                )
+
+                if st.button(
+                    "🗑️️ ยืนยันลบ Anime Node",
+                    type="primary",
+                    use_container_width=True,
+                ):
+                    q_del = "MATCH (a:Anime {anime_id: $aid}) DETACH DELETE a"
+                    query(q_del, {"aid": del_target}, write=True)
+                    
+                    # ลบออกจาก Session State รูปภาพด้วย
+                    st.session_state["ANIME_IMAGES"].pop(del_target, None)
+
+                    st.success(f"ลบ Anime {del_target} ออกจากระบบแล้ว!")
+                    st.rerun()
             else:
-                if amap:
-                    del_a = st.selectbox("เลือก Anime ที่ต้องการลบ:", list(amap.keys()), format_func=lambda x: f"{x} — {amap[x]}")
-                    if st.button("🗑 ยืนยันลบ Anime ถาวร", type="primary", use_container_width=True):
-                        query("MATCH (a:Anime {anime_id: $aid}) DETACH DELETE a", {"aid": del_a}, write=True)
-                        st.session_state["ANIME_IMAGES"].pop(del_a, None)
-                        st.success("ลบ Anime เรียบร้อยแล้ว!")
-                        st.rerun()
+                st.info("ไม่มีรายการ Anime ให้ลบ")
 
     elif admin_input != "":
         st.error("❌ รหัสผ่าน Admin ไม่ถูกต้อง")
     else:
-        st.info("🔒 กรุณากรอกรหัสผ่าน Admin เพื่อเปิดเมนูจัดการความสัมพันธ์")
+        st.info(
+            "🔒 กรุณากรอกรหัสผ่าน Admin "
+            " เพื่อเพิ่มหรือลบ Node และความสัมพันธ์"
+        )
