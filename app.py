@@ -20,7 +20,7 @@ from neo4j_service import (
 ANIME_IMAGES = {
     "A001": "https://cdn.myanimelist.net/images/anime/1244/138851l.jpg",  # One Piece
     "A002": "https://cdn.myanimelist.net/images/anime/1141/142503l.jpg",  # Naruto
-    "A003": "https://cdn.myanimelist.net/images/anime/1286/99889l.jpg",   # Demon Slayer
+    "A003": "https://cdn.myanimelist.net/images/anime/1286/99889l.jpg",    # Demon Slayer
     "A004": "https://cdn.myanimelist.net/images/anime/10/47347l.jpg",     # Attack on Titan
     "A005": "https://huggingface.co/datasets/deepghs/fancaps_animes/resolve/main/images/40748__jujutsu_kaisen.jpg",  # Jujutsu Kaisen
     "A006": "https://cdn.myanimelist.net/images/anime/10/78745l.jpg",     # My Hero Academia
@@ -652,7 +652,7 @@ with tab_search:
 # =========================================================
 with tab_manage:
     st.subheader(
-        "⚙️ จัดการข้อมูล"
+        "⚙️️ จัดการข้อมูล"
     )
 
     with st.expander(
@@ -674,42 +674,96 @@ with tab_manage:
             )
             st.rerun()
 
-    anime_rows = search_anime("")
+    st.markdown("---")
 
+    # 1. บันทึกประวัติการดูสำหรับ User
+    anime_rows = search_anime("")
     amap = {
         item["anime_id"]: item["title"]
         for item in anime_rows
-    }
+    } if anime_rows else {}
 
-    with st.form(
-        "watch_form"
-    ):
-        st.markdown(
-            "### 📺 เพิ่ม Anime ที่ดูแล้ว"
-        )
+    with st.form("watch_form"):
+        st.markdown("### 📺 เพิ่ม Anime ที่ดูแล้ว (สำหรับ User)")
 
-        a = st.selectbox(
-            "Anime",
-            list(amap),
-            format_func=lambda x: f"{x} — {amap[x]}",
-        )
-
-        d = st.date_input(
-            "วันที่ดู"
-        )
-
-        if st.form_submit_button(
-            "บันทึก WATCHED",
-            use_container_width=True,
-        ):
-            record_watched(
-                uid,
-                a,
-                str(d),
+        if amap:
+            a = st.selectbox(
+                "Anime",
+                list(amap),
+                format_func=lambda x: f"{x} — {amap[x]}",
             )
+        else:
+            a = None
+            st.info("ยังไม่มีรายการ Anime ในระบบ")
 
-            st.success(
-                "บันทึกข้อมูลแล้ว"
-            )
+        d = st.date_input("วันที่ดู")
 
-            st.rerun()
+        if st.form_submit_button("บันทึก WATCHED", use_container_width=True):
+            if a:
+                record_watched(
+                    uid,
+                    a,
+                    str(d),
+                )
+                st.success("บันทึกข้อมูลแล้ว")
+                st.rerun()
+            else:
+                st.warning("กรุณาเลือก Anime ก่อนบันทึก")
+
+    st.markdown("---")
+
+    # 2. ระบบจัดการ Anime Node สำหรับ Admin
+    st.markdown("### 🛠️ จัดการข้อมูล Anime Node ใน Neo4j (สำหรับ Admin)")
+
+    admin_pass = st.secrets.get("neo4j", {}).get("ADMIN_PASSWORD", "1234")
+    admin_input = st.text_input(
+        "🔑 กรอกรหัสผ่าน Admin เพื่อเปิดเมนูจัดการ Node",
+        type="password",
+        key="admin_purple_manage_key"
+    )
+
+    if admin_input == str(admin_pass):
+        st.success("🔓 สิทธิ์ Admin ถูกต้อง")
+
+        tab_add_node, tab_del_node = st.tabs(["➕ เพิ่ม Anime ใหม่", "🗑️ ลบ Anime ถาวร"])
+
+        # --- เพิ่ม Node ---
+        with tab_add_node:
+            with st.form("add_anime_node_purple"):
+                new_aid = st.text_input("Anime ID (เช่น A011):")
+                new_title = st.text_input("ชื่อเรื่อง Anime:")
+                
+                if st.form_submit_button("➕ บันทึกอนิเมะเข้า Neo4j", use_container_width=True):
+                    if new_aid.strip() and new_title.strip():
+                        q_add = """
+                        MERGE (a:Anime {anime_id: $aid})
+                        SET a.title = $title
+                        """
+                        query(q_add, {"aid": new_aid.strip(), "title": new_title.strip()})
+                        st.success(f"เพิ่มอนิเมะ '{new_title}' ({new_aid}) เรียบร้อยแล้ว!")
+                        st.rerun()
+                    else:
+                        st.warning("กรุณากรอกข้อมูล ID และชื่อเรื่องให้ครบถ้วน")
+
+        # --- ลบ Node ---
+        with tab_del_node:
+            if amap:
+                del_target = st.selectbox(
+                    "เลือก Anime ที่ต้องการลบ:",
+                    list(amap),
+                    format_func=lambda x: f"{x} — {amap[x]}",
+                    key="del_anime_select"
+                )
+
+                if st.button("🗑️ ยืนยันลบ Anime Node", type="primary", use_container_width=True):
+                    q_del = "MATCH (a:Anime {anime_id: $aid}) DETACH DELETE a"
+                    query(q_del, {"aid": del_target})
+                    st.success(f"ลบ Anime {del_target} ออกจากระบบแล้ว!")
+                    st.rerun()
+            else:
+                st.info("ไม่มีรายการ Anime ให้ลบ")
+
+    elif admin_input != "":
+        st.error("❌ รหัสผ่าน Admin ไม่ถูกต้อง")
+    else:
+        st.info("🔒 กรุณากรอกรหัสผ่าน Admin (ค่าเริ่มต้น: 1234) เพื่อเพิ่มหรือลบ Anime Node")
