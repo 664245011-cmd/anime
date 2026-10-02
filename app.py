@@ -21,7 +21,7 @@ ANIME_IMAGES = {
     "A002": "https://cdn.myanimelist.net/images/anime/1141/142503l.jpg",  # Naruto
     "A003": "https://cdn.myanimelist.net/images/anime/1286/99889l.jpg",   # Demon Slayer
     "A004": "https://cdn.myanimelist.net/images/anime/10/47347l.jpg",     # Attack on Titan
-    "A005": "https://cdn.myanimelist.net/images/anime/1171/109636l.jpg",  # Jujutsu Kaisen
+    "A005": "https://huggingface.co/datasets/deepghs/fancaps_animes/resolve/main/images/40748__jujutsu_kaisen.jpg",  # Jujutsu Kaisen
     "A006": "https://cdn.myanimelist.net/images/anime/10/78745l.jpg",     # My Hero Academia
     "A007": "https://cdn.myanimelist.net/images/anime/1079/138100l.jpg",  # Death Note
     "A008": "https://cdn.myanimelist.net/images/anime/7/76014l.jpg",      # Haikyuu!!
