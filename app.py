@@ -464,7 +464,7 @@ with tab_rec:
 # Anime Graph
 # =========================================================
 with tab_graph:
-    st.subheader("🕸️ กราฟความสัมพันธ์ของคุณ")
+    st.subheader("🕸️️ กราฟความสัมพันธ์ของคุณ")
 
     st.caption(
         "โหนดสีม่วง = User · "
@@ -614,7 +614,7 @@ with tab_search:
 # Manage Data
 # =========================================================
 with tab_manage:
-    st.subheader("⚙️️ จัดการข้อมูล")
+    st.subheader("⚙ จัดการข้อมูล")
 
     with st.expander("🚀 โหลดข้อมูลตัวอย่าง"):
         st.write(
@@ -681,13 +681,14 @@ with tab_manage:
     if admin_input == str(admin_pass):
         st.success("🔓 สิทธิ์ Admin ถูกต้อง")
 
-        tab_add_user, tab_add_node, tab_del_node = st.tabs([
-            "👤➕ เพิ่ม User ใหม่ & เชื่อมความสัมพันธ์",
-            "➕ เพิ่ม Anime ใหม่",
-            "🗑 ลบ Anime ถาวร",
+        tab_add_user, tab_del_user, tab_add_node, tab_del_node = st.tabs([
+            "👤➕ เพิ่ม User ใหม่",
+            "👤🗑 ลบ User ถาวร",
+            "🎬➕ เพิ่ม Anime ใหม่",
+            "🎬🗑 ลบ Anime ถาวร",
         ])
 
-        # --- เพิ่ม User ใหม่ + เชื่อม FRIEND_OF + เชื่อม WATCHED ---
+        # --- 1. เพิ่ม User ใหม่ + เชื่อม FRIEND_OF + เชื่อม WATCHED ---
         with tab_add_user:
             with st.form("add_user_form"):
                 st.markdown("#### 👤 1. ข้อมูลผู้ใช้ใหม่")
@@ -740,7 +741,26 @@ with tab_manage:
                     else:
                         st.warning("กรุณากรอก User ID และ ชื่อผู้ใช้งาน ให้ครบถ้วน")
 
-        # --- เพิ่ม Node Anime ---
+        # --- 2. ลบ User ถาวร ---
+        with tab_del_user:
+            if names:
+                del_user_target = st.selectbox(
+                    "เลือก User ที่ต้องการลบ:",
+                    list(names.keys()),
+                    format_func=lambda x: f"{names[x]} · {x}",
+                    key="del_user_select",
+                )
+
+                if st.button("🗑️ ยืนยันลบ User ถาวร", type="primary", use_container_width=True, key="btn_del_user"):
+                    # ลบ Node User พร้อมตัดความสัมพันธ์ทั้งหมด (DETACH DELETE)
+                    q_del_user = "MATCH (u:User {user_id: $uid}) DETACH DELETE u"
+                    query(q_del_user, {"uid": del_user_target}, write=True)
+                    st.success(f"ลบผู้ใช้ {names[del_user_target]} ({del_user_target}) ออกจากระบบแล้ว!")
+                    st.rerun()
+            else:
+                st.info("ไม่มีรายการ User ให้ลบ")
+
+        # --- 3. เพิ่ม Node Anime ---
         with tab_add_node:
             with st.form("add_anime_node_purple"):
                 new_aid = st.text_input("Anime ID (เช่น A011):")
@@ -766,7 +786,7 @@ with tab_manage:
                     else:
                         st.warning("กรุณากรอกข้อมูล ID และชื่อเรื่องให้ครบถ้วน")
 
-        # --- ลบ Node Anime ---
+        # --- 4. ลบ Node Anime ---
         with tab_del_node:
             if amap:
                 del_target = st.selectbox(
