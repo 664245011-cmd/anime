@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import streamlit as st
+
 from neo4j_service import (
     get_users,
     get_dashboard_metrics,
@@ -13,6 +14,9 @@ from neo4j_service import (
     query,
 )
 
+# =========================================================
+# Page Config
+# =========================================================
 st.set_page_config(
     page_title="AnimeGraph Recommendation",
     page_icon="🎌",
@@ -20,9 +24,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# =========================
+# =========================================================
 # CSS
-# =========================
+# =========================================================
 st.markdown(
     """
     <style>
@@ -35,7 +39,12 @@ st.markdown(
     .hero {
         padding: 24px 28px;
         border-radius: 22px;
-        background: linear-gradient(135deg, #111827, #312e81 55%, #581c87);
+        background: linear-gradient(
+            135deg,
+            #111827,
+            #312e81 55%,
+            #581c87
+        );
         color: white;
         margin-bottom: 22px;
         box-shadow: 0 12px 35px rgba(0,0,0,.12);
@@ -62,23 +71,40 @@ st.markdown(
     .anime-card {
         padding: 16px 18px;
         border-radius: 16px;
-        border: 1px solid rgba(128,128,128,.2);
+        border: 1px solid rgba(128,128,128,.20);
         background: linear-gradient(
             145deg,
             rgba(99,102,241,.10),
             rgba(168,85,247,.06)
         );
-        height: 100%;
+        min-height: 150px;
+        margin-top: -4px;
     }
 
-    /* รูป Anime */
-    .anime-image {
-        width: 100%;
-        height: 260px;
-        object-fit: cover;
-        border-radius: 14px;
-        margin-bottom: 12px;
-        display: block;
+    .anime-title {
+        font-size: 1.08rem;
+        font-weight: 700;
+        margin: 8px 0;
+    }
+
+    .score {
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin: 4px 0 8px;
+    }
+
+    .small {
+        font-size: .84rem;
+        opacity: .72;
+    }
+
+    .pill {
+        display: inline-block;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: rgba(99,102,241,.14);
+        font-size: .78rem;
+        margin-right: 5px;
     }
 
     .rank-card {
@@ -133,7 +159,11 @@ st.markdown(
 
     .rank-fill {
         height: 100%;
-        background: linear-gradient(90deg,#8b5cf6,#a78bfa);
+        background: linear-gradient(
+            90deg,
+            #8b5cf6,
+            #a78bfa
+        );
         border-radius: 99px;
     }
 
@@ -153,53 +183,39 @@ st.markdown(
         font-size: 12px;
     }
 
-    .anime-title {
-        font-size: 1.08rem;
-        font-weight: 700;
-        margin: 4px 0 8px;
-    }
-
-    .score {
-        font-size: 1.45rem;
-        font-weight: 800;
-    }
-
-    .small {
-        font-size: .84rem;
-        opacity: .72;
-    }
-
-    .pill {
-        display: inline-block;
-        padding: 4px 9px;
-        border-radius: 999px;
-        background: rgba(99,102,241,.14);
-        font-size: .78rem;
-        margin-right: 5px;
-    }
-
     [data-testid="stMetricValue"] {
         font-size: 1.65rem;
+    }
+
+    /* ปรับขนาดรูป Anime */
+    [data-testid="stImage"] img {
+        width: 100%;
+        height: 260px;
+        object-fit: cover;
+        border-radius: 14px;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# =========================
+# =========================================================
 # Connect Neo4j
-# =========================
+# =========================================================
 try:
     users = get_users()
     stats = get_dashboard_metrics()
 except Exception as e:
-    st.error("เชื่อมต่อ Neo4j ไม่สำเร็จ กรุณาตรวจสอบ .streamlit/secrets.toml")
+    st.error(
+        "เชื่อมต่อ Neo4j ไม่สำเร็จ "
+        "กรุณาตรวจสอบ .streamlit/secrets.toml"
+    )
     st.exception(e)
     st.stop()
 
-# =========================
-# No users
-# =========================
+# =========================================================
+# No Users
+# =========================================================
 if not users:
     st.markdown(
         """
@@ -222,11 +238,17 @@ if not users:
 
     st.stop()
 
-# =========================
-# User / Sidebar
-# =========================
-names = {u["user_id"]: u["name"] for u in users}
+# =========================================================
+# Users
+# =========================================================
+names = {
+    u["user_id"]: u["name"]
+    for u in users
+}
 
+# =========================================================
+# Sidebar
+# =========================================================
 with st.sidebar:
     st.markdown("## 🎌 AnimeGraph")
     st.caption("Anime Recommendation System")
@@ -247,14 +269,30 @@ with st.sidebar:
     st.divider()
 
     st.caption("Graph overview")
-    st.metric("👤 Users", stats["users"])
-    st.metric("🎬 Anime", stats["anime"])
-    st.metric("🔗 Friendships", stats["friendships"])
-    st.metric("👁️ Watched", stats["watched"])
 
-# =========================
+    st.metric(
+        "👤 Users",
+        stats["users"],
+    )
+
+    st.metric(
+        "🎬 Anime",
+        stats["anime"],
+    )
+
+    st.metric(
+        "🔗 Friendships",
+        stats["friendships"],
+    )
+
+    st.metric(
+        "👁️ Watched",
+        stats["watched"],
+    )
+
+# =========================================================
 # Hero
-# =========================
+# =========================================================
 st.markdown(
     f"""
     <div class="hero">
@@ -268,9 +306,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# =========================
-# Metrics
-# =========================
+# =========================================================
+# Dashboard Metrics
+# =========================================================
 m1, m2, m3, m4 = st.columns(4)
 
 m1.metric("Users", stats["users"])
@@ -280,9 +318,9 @@ m4.metric("Friendships", stats["friendships"])
 
 st.write("")
 
-# =========================
+# =========================================================
 # Tabs
-# =========================
+# =========================================================
 tab_rec, tab_graph, tab_profile, tab_search, tab_manage = st.tabs(
     [
         "✨ แนะนำสำหรับคุณ",
@@ -298,75 +336,118 @@ tab_rec, tab_graph, tab_profile, tab_search, tab_manage = st.tabs(
 # =========================================================
 with tab_rec:
     st.subheader("✨ Anime ที่น่าจะเหมาะกับคุณ")
+
     st.caption(
-        "คะแนนมาจากจำนวนเพื่อนที่คุณเชื่อมโยงด้วยและเคยดู Anime เรื่องนั้น"
+        "คะแนนมาจากจำนวนเพื่อนที่คุณเชื่อมโยงด้วย "
+        "และเคยดู Anime เรื่องนั้น"
     )
 
-    df = pd.DataFrame(recommend_anime(uid, limit))
+    df = pd.DataFrame(
+        recommend_anime(uid, limit)
+    )
 
     if df.empty:
         st.info(
             "ยังไม่มีคำแนะนำสำหรับผู้ใช้นี้ "
             "ลองเพิ่ม WATCHED ให้เพื่อนก่อน"
         )
+
     else:
-        cols = st.columns(min(3, len(df)))
+        cols = st.columns(
+            min(3, len(df))
+        )
 
         for i, row in df.iterrows():
+
             with cols[i % len(cols)]:
-                anime_id = str(row["anime_id"])
+
+                anime_id = str(
+                    row["anime_id"]
+                )
+
+                # =================================================
+                # รูป Anime
+                # รูปอยู่โฟลเดอร์เดียวกับ app.py
+                # เช่น app.py + A001.png
+                # =================================================
                 image_path = os.path.join(
-                    "assets",
+                    os.path.dirname(
+                        os.path.abspath(__file__)
+                    ),
                     f"{anime_id}.png",
                 )
 
-                # แสดงรูป Anime ตาม anime_id
                 if os.path.exists(image_path):
                     st.image(
                         image_path,
                         use_container_width=True,
                     )
                 else:
-                    st.info(
-                        f"ไม่พบรูป {anime_id}.png",
+                    st.warning(
+                        f"ไม่พบรูป {anime_id}.png"
                     )
 
-                friends = row.get("watched_by_friends") or []
+                # =================================================
+                # ข้อมูลเพื่อน
+                # =================================================
+                friends = (
+                    row.get(
+                        "watched_by_friends"
+                    )
+                    or []
+                )
+
                 friend_text = (
-                    ", ".join(friends[:3])
+                    ", ".join(
+                        friends[:3]
+                    )
                     if friends
                     else "ยังไม่มีข้อมูล"
                 )
 
+                # =================================================
+                # Card
+                # ใช้ Streamlit แยกส่วน
+                # ป้องกัน HTML แสดงเป็นข้อความ
+                # =================================================
                 st.markdown(
-                    f"""
-                    <div class="anime-card">
-                        <span class="pill">{anime_id}</span>
-
-                        <div class="anime-title">
-                            🎬 {row["title"]}
-                        </div>
-
-                        <div class="score">
-                            {row["score"]}
-                            <span class="small">คะแนน</span>
-                        </div>
-
-                        <div class="small">
-                            👥 เพื่อนที่เคยดู:
-                            {friend_text}
-                        </div>
-                    </div>
-                    """,
+                    '<div class="anime-card">',
                     unsafe_allow_html=True,
                 )
 
+                st.markdown(
+                    f'<span class="pill">{anime_id}</span>',
+                    unsafe_allow_html=True,
+                )
+
+                st.markdown(
+                    f"**🎬 {row['title']}**"
+                )
+
+                st.markdown(
+                    f"### {row['score']} "
+                    f"<span class='small'>คะแนน</span>",
+                    unsafe_allow_html=True,
+                )
+
+                st.markdown(
+                    f"👥 เพื่อนที่เคยดู: {friend_text}"
+                )
+
+                st.markdown(
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+
+        # =====================================================
+        # Ranking
+        # =====================================================
         st.write("")
 
-        # =========================
-        # Ranking
-        # =========================
-        st.markdown("### 📊 อันดับ Anime ที่แนะนำ")
+        st.markdown(
+            "### 📊 อันดับ Anime ที่แนะนำ"
+        )
+
         st.caption(
             "เรียงตามจำนวนเพื่อนที่คุณเชื่อมโยงด้วย "
             "เคยดู Anime เรื่องนั้น"
@@ -381,32 +462,40 @@ with tab_rec:
             df.iterrows(),
             start=1,
         ):
-            title = str(rec["title"])
-            score = int(rec["score"])
+            title = str(
+                rec["title"]
+            )
+
+            score = int(
+                rec["score"]
+            )
 
             percent = int(
                 (score / max_score) * 100
             )
 
-            friends = rec.get(
-                "watched_by_friends"
-            ) or []
+            friends = (
+                rec.get(
+                    "watched_by_friends"
+                )
+                or []
+            )
 
             friend_text = (
-                ", ".join(friends[:3])
+                ", ".join(
+                    friends[:3]
+                )
                 if friends
                 else "ไม่มีข้อมูล"
             )
 
             html = f"""
             <div class="rank-card">
-
                 <div class="rank-no">
                     #{rank}
                 </div>
 
                 <div class="rank-info">
-
                     <div class="rank-title">
                         🎬 {title}
                     </div>
@@ -422,14 +511,12 @@ with tab_rec:
                             style="width:{percent}%"
                         ></div>
                     </div>
-
                 </div>
 
                 <div class="rank-score">
                     <b>{score}</b>
                     <span>คะแนน</span>
                 </div>
-
             </div>
             """
 
@@ -439,10 +526,12 @@ with tab_rec:
             )
 
 # =========================================================
-# Graph
+# Anime Graph
 # =========================================================
 with tab_graph:
-    st.subheader("🕸️ กราฟความสัมพันธ์ของคุณ")
+    st.subheader(
+        "🕸️ กราฟความสัมพันธ์ของคุณ"
+    )
 
     st.caption(
         "โหนดสีม่วง = User · "
@@ -457,60 +546,83 @@ with tab_graph:
         edges = []
 
         for r in rows:
-            s = r["source_name"]
-            t = r["target_name"]
+            source_name = r["source_name"]
+            target_name = r["target_name"]
 
-            sl = r["source_label"]
-            tl = r["target_label"]
+            source_label = r["source_label"]
+            target_label = r["target_label"]
 
-            nodes[s] = sl
-            nodes[t] = tl
+            nodes[source_name] = source_label
+            nodes[target_name] = target_label
 
             edges.append(
                 (
-                    s,
-                    t,
+                    source_name,
+                    target_name,
                     r["relationship"],
                 )
             )
 
-        def esc(x):
-            return str(x).replace('"', "'")
+        def esc(value):
+            return str(value).replace(
+                '"',
+                "'",
+            )
 
         dot = [
             "graph G {",
-            'graph [rankdir=LR, bgcolor="transparent", pad="0.3"];',
-            'node [fontname="Arial", style="filled", color="#cbd5e1", penwidth=1.5];',
-            'edge [fontname="Arial", color="#94a3b8", fontcolor="#64748b", penwidth=1.4];',
+            (
+                'graph [rankdir=LR, '
+                'bgcolor="transparent", '
+                'pad="0.3"];'
+            ),
+            (
+                'node [fontname="Arial", '
+                'style="filled", '
+                'color="#cbd5e1", '
+                'penwidth=1.5];'
+            ),
+            (
+                'edge [fontname="Arial", '
+                'color="#94a3b8", '
+                'fontcolor="#64748b", '
+                'penwidth=1.4];'
+            ),
         ]
 
-        for n, label in nodes.items():
+        for node_name, label in nodes.items():
+
             if label == "User":
+
                 fill = (
                     "#ddd6fe"
-                    if n != names[uid]
+                    if node_name != names[uid]
                     else "#a78bfa"
                 )
 
                 dot.append(
-                    f'"{esc(n)}" '
+                    f'"{esc(node_name)}" '
                     f'[shape=circle, '
                     f'fillcolor="{fill}", '
-                    f'label="{esc(n)}"];'
+                    f'label="{esc(node_name)}"];'
                 )
+
             else:
+
                 dot.append(
-                    f'"{esc(n)}" '
+                    f'"{esc(node_name)}" '
                     f'[shape=box, '
                     f'style="rounded,filled", '
                     f'fillcolor="#fef3c7", '
-                    f'label="{esc(n)}"];'
+                    f'label="{esc(node_name)}"];'
                 )
 
-        for s, t, rel in edges:
+        for source, target, relationship in edges:
+
             dot.append(
-                f'"{esc(s)}" -- "{esc(t)}" '
-                f'[label="{esc(rel)}"];'
+                f'"{esc(source)}" -- '
+                f'"{esc(target)}" '
+                f'[label="{esc(relationship)}"];'
             )
 
         dot.append("}")
@@ -528,18 +640,25 @@ with tab_graph:
                 hide_index=True,
                 use_container_width=True,
             )
+
     else:
-        st.info("ยังไม่มีเส้นทางในกราฟ")
+        st.info(
+            "ยังไม่มีเส้นทางในกราฟ"
+        )
 
 # =========================================================
 # Profile
 # =========================================================
 with tab_profile:
+
     p = get_profile(uid)
 
-    left, right = st.columns([1, 2])
+    left, right = st.columns(
+        [1, 2]
+    )
 
     with left:
+
         st.markdown(
             f"""
             <div class="card">
@@ -564,15 +683,23 @@ with tab_profile:
         )
 
     with right:
+
         watched = pd.DataFrame(
             p["watched"]
         )
 
-        st.subheader("📺 ประวัติการดู")
+        st.subheader(
+            "📺 ประวัติการดู"
+        )
 
         if watched.empty:
-            st.info("ยังไม่มีประวัติการดู")
+
+            st.info(
+                "ยังไม่มีประวัติการดู"
+            )
+
         else:
+
             st.dataframe(
                 watched.rename(
                     columns={
@@ -585,14 +712,19 @@ with tab_profile:
             )
 
 # =========================================================
-# Search
+# Search Anime
 # =========================================================
 with tab_search:
-    st.subheader("🔎 ค้นหา Anime")
+
+    st.subheader(
+        "🔎 ค้นหา Anime"
+    )
 
     keyword = st.text_input(
         "พิมพ์ชื่อ Anime",
-        placeholder="เช่น Naruto, One Piece...",
+        placeholder=(
+            "เช่น Naruto, One Piece..."
+        ),
     )
 
     result = pd.DataFrame(
@@ -611,37 +743,48 @@ with tab_search:
     )
 
 # =========================================================
-# Manage
+# Manage Data
 # =========================================================
 with tab_manage:
-    st.subheader("⚙️ จัดการข้อมูล")
+
+    st.subheader(
+        "⚙️ จัดการข้อมูล"
+    )
 
     with st.expander(
         "🚀 โหลดข้อมูลตัวอย่าง"
     ):
+
         st.write(
-            "สร้างข้อมูล User 10 คน, Anime 10 เรื่อง "
-            "และความสัมพันธ์สำหรับทดลองระบบ"
+            "สร้างข้อมูล User 10 คน, "
+            "Anime 10 เรื่อง และความสัมพันธ์ "
+            "สำหรับทดลองระบบ"
         )
 
         if st.button(
             "โหลด / อัปเดต Demo Data",
             use_container_width=True,
         ):
+
             seed_demo_data()
+
             st.success(
                 "โหลดข้อมูลเรียบร้อย"
             )
+
             st.rerun()
 
     anime_rows = search_anime("")
 
     amap = {
-        x["anime_id"]: x["title"]
-        for x in anime_rows
+        item["anime_id"]: item["title"]
+        for item in anime_rows
     }
 
-    with st.form("watch_form"):
+    with st.form(
+        "watch_form"
+    ):
+
         st.markdown(
             "### 📺 เพิ่ม Anime ที่ดูแล้ว"
         )
@@ -661,6 +804,7 @@ with tab_manage:
             "บันทึก WATCHED",
             use_container_width=True,
         ):
+
             record_watched(
                 uid,
                 a,
