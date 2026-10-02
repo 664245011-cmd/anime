@@ -737,6 +737,6 @@ with tab_manage:
     st.error("❌ รหัสผ่าน Admin ไม่ถูกต้อง")
   else:
     st.info(
-        "🔒 กรุณากรอกรหัสผ่าน Admin (ค่าเริ่มต้น: 1234)"
+        "🔒 กรุณากรอกรหัสผ่าน Admin "
         " เพื่อเพิ่มหรือลบ Anime Node"
     )
