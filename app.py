@@ -84,16 +84,42 @@ st.markdown(
     }
 
     .anime-card {
-        padding: 16px 18px;
+        overflow: hidden;
         border-radius: 16px;
         border: 1px solid rgba(128,128,128,.20);
-        background: linear-gradient(
-            145deg,
-            rgba(99,102,241,.10),
-            rgba(168,85,247,.06)
-        );
-        min-height: 150px;
-        margin-top: -4px;
+        background: linear-gradient(145deg, rgba(99,102,241,.10), rgba(168,85,247,.06));
+        margin-top: 8px;
+        margin-bottom: 18px;
+    }
+
+    .anime-card-image {
+        width: 100%;
+        height: 260px;
+        object-fit: cover;
+        display: block;
+        border-radius: 0;
+    }
+
+    .anime-card-body {
+        padding: 14px 16px 16px;
+    }
+
+    .anime-card-title {
+        font-size: 1.08rem;
+        font-weight: 700;
+        margin: 9px 0 6px;
+    }
+
+    .anime-card-score {
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin: 5px 0 8px;
+    }
+
+    .anime-card-friends {
+        font-size: .88rem;
+        opacity: .75;
+        line-height: 1.45;
     }
 
     .anime-title {
@@ -202,13 +228,6 @@ st.markdown(
         font-size: 1.65rem;
     }
 
-    /* ปรับขนาดรูป Anime */
-    [data-testid="stImage"] img {
-        width: 100%;
-        height: 260px;
-        object-fit: cover;
-        border-radius: 14px;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -376,75 +395,50 @@ with tab_rec:
 
             with cols[i % len(cols)]:
 
-                anime_id = str(
-                    row["anime_id"]
-                )
-
-                # =================================================
-                # รูป Anime
-                # ใช้ URL ออนไลน์โดยตรง ไม่ต้องมี A001.png - A010.png
-                # =================================================
+                anime_id = str(row["anime_id"])
+                title = str(row["title"])
+                score = row["score"]
                 image_url = ANIME_IMAGES.get(anime_id)
 
-                if image_url:
-                    st.image(
-                        image_url,
-                        use_container_width=True,
-                    )
-                else:
-                    st.info(f"ยังไม่มี URL รูปสำหรับ {anime_id}")
-
-                # =================================================
-                # ข้อมูลเพื่อน
-                # =================================================
-                friends = (
-                    row.get(
-                        "watched_by_friends"
-                    )
-                    or []
-                )
+                friends = row.get("watched_by_friends", [])
+                if friends is None:
+                    friends = []
+                if not isinstance(friends, (list, tuple)):
+                    friends = [str(friends)]
 
                 friend_text = (
-                    ", ".join(
-                        friends[:3]
-                    )
+                    ", ".join(str(x) for x in friends[:3])
                     if friends
                     else "ยังไม่มีข้อมูล"
                 )
 
-                # =================================================
-                # Card
-                # ใช้ Streamlit แยกส่วน
-                # ป้องกัน HTML แสดงเป็นข้อความ
-                # =================================================
-                st.markdown(
-                    '<div class="anime-card">',
-                    unsafe_allow_html=True,
-                )
+                if image_url:
+                    image_html = (
+                        f'<img class="anime-card-image" src="{image_url}" '
+                        f'alt="{title}" loading="lazy">'
+                    )
+                else:
+                    image_html = (
+                        '<div class="anime-card-image" style="display:flex;'
+                        'align-items:center;justify-content:center;">'
+                        '🎌 ไม่พบรูป Anime</div>'
+                    )
 
-                st.markdown(
-                    f'<span class="pill">{anime_id}</span>',
-                    unsafe_allow_html=True,
-                )
+                # ทุกอย่างอยู่ใน HTML card เดียว
+                # ไม่ใช้ st.image และไม่เปิด/ปิด div ข้าม Streamlit elements
+                card_html = f"""
+                <div class="anime-card">
+                    {image_html}
+                    <div class="anime-card-body">
+                        <span class="pill">{anime_id}</span>
+                        <div class="anime-card-title">🎬 {title}</div>
+                        <div class="anime-card-score">{score} <span class="small">คะแนน</span></div>
+                        <div class="anime-card-friends">👥 เพื่อนที่เคยดู: {friend_text}</div>
+                    </div>
+                </div>
+                """
 
-                st.markdown(
-                    f"**🎬 {row['title']}**"
-                )
-
-                st.markdown(
-                    f"### {row['score']} "
-                    f"<span class='small'>คะแนน</span>",
-                    unsafe_allow_html=True,
-                )
-
-                st.markdown(
-                    f"👥 เพื่อนที่เคยดู: {friend_text}"
-                )
-
-                st.markdown(
-                    "</div>",
-                    unsafe_allow_html=True,
-                )
+                st.markdown(card_html, unsafe_allow_html=True)
 
         # =====================================================
         # Ranking
