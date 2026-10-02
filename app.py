@@ -228,7 +228,6 @@ st.markdown(
     [data-testid="stMetricValue"] {
         font-size: 1.65rem;
     }
-
     </style>
     """,
     unsafe_allow_html=True,
@@ -386,16 +385,13 @@ with tab_rec:
             "ยังไม่มีคำแนะนำสำหรับผู้ใช้นี้ "
             "ลองเพิ่ม WATCHED ให้เพื่อนก่อน"
         )
-
     else:
         cols = st.columns(
             min(3, len(df))
         )
 
         for i, row in df.iterrows():
-
             with cols[i % len(cols)]:
-
                 anime_id = str(row["anime_id"])
                 title = str(row["title"])
                 score = row["score"]
@@ -425,8 +421,6 @@ with tab_rec:
                         '🎌 ไม่พบรูป Anime</div>'
                     )
 
-                # ทุกอย่างอยู่ใน HTML card เดียว
-                # ไม่ใช้ st.image และไม่เปิด/ปิด div ข้าม Streamlit elements
                 card_html = f"""
                 <div class="anime-card">
                     {image_html}
@@ -441,13 +435,8 @@ with tab_rec:
 
                 st.markdown(card_html, unsafe_allow_html=True)
 
-        # =====================================================
-        # Ranking
-        # =====================================================
         st.write("")
-
         st.markdown("### 📊 อันดับ Anime ที่แนะนำ")
-
         st.caption(
             "เรียงตามจำนวนเพื่อนที่คุณเชื่อมโยงด้วย "
             "เคยดู Anime เรื่องนั้น"
@@ -465,8 +454,6 @@ with tab_rec:
                 friends = []
             friend_text = ", ".join(map(str, friends[:3])) if friends else "ไม่มีข้อมูล"
 
-            # HTML ทั้งก้อนต้องต่อเนื่องกัน ไม่มีบรรทัดว่าง
-            # เพื่อไม่ให้ Streamlit ตีความบางส่วนเป็น Code Block
             html = f"""<div class="rank-card">
 <div class="rank-no">#{rank}</div>
 <div class="rank-info">
@@ -545,9 +532,7 @@ with tab_graph:
         ]
 
         for node_name, label in nodes.items():
-
             if label == "User":
-
                 fill = (
                     "#ddd6fe"
                     if node_name != names[uid]
@@ -560,9 +545,7 @@ with tab_graph:
                     f'fillcolor="{fill}", '
                     f'label="{esc(node_name)}"];'
                 )
-
             else:
-
                 dot.append(
                     f'"{esc(node_name)}" '
                     f'[shape=box, '
@@ -572,7 +555,6 @@ with tab_graph:
                 )
 
         for source, target, relationship in edges:
-
             dot.append(
                 f'"{esc(source)}" -- '
                 f'"{esc(target)}" '
@@ -604,63 +586,32 @@ with tab_graph:
 # Profile
 # =========================================================
 with tab_profile:
-
     p = get_profile(uid)
 
-    left, right = st.columns(
-        [1, 2]
-    )
+    left, right = st.columns([1, 2])
 
     with left:
-
-        st.markdown(
-            f"""
-            <div class="card">
-                <div class="small">
-                    USER ID
-                </div>
-
-                <h2>
-                    {p["user_id"]}
-                </h2>
-
-                <div class="small">
-                    ชื่อผู้ใช้
-                </div>
-
-                <h3>
-                    👤 {p["name"]}
-                </h3>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with st.container(border=True):
+            st.caption("USER ID")
+            st.subheader(p["user_id"])
+            st.caption("ชื่อผู้ใช้")
+            st.subheader(f"👤 {p['name']}")
 
     with right:
-
-        watched = pd.DataFrame(
-            p["watched"]
-        )
-
-        st.subheader(
-            "📺 ประวัติการดู"
-        )
+        watched = pd.DataFrame(p.get("watched", []))
+        st.subheader("📺 ประวัติการดู")
 
         if watched.empty:
-
-            st.info(
-                "ยังไม่มีประวัติการดู"
-            )
-
+            st.info("ยังไม่มีประวัติการดู")
         else:
-
+            watched = watched.rename(
+                columns={
+                    "anime_id": "รหัส",
+                    "title": "Anime",
+                }
+            )
             st.dataframe(
-                watched.rename(
-                    columns={
-                        "anime_id": "รหัส",
-                        "title": "Anime",
-                    }
-                ),
+                watched,
                 hide_index=True,
                 use_container_width=True,
             )
@@ -669,7 +620,6 @@ with tab_profile:
 # Search Anime
 # =========================================================
 with tab_search:
-
     st.subheader(
         "🔎 ค้นหา Anime"
     )
@@ -701,7 +651,6 @@ with tab_search:
 # Manage Data
 # =========================================================
 with tab_manage:
-
     st.subheader(
         "⚙️ จัดการข้อมูล"
     )
@@ -709,7 +658,6 @@ with tab_manage:
     with st.expander(
         "🚀 โหลดข้อมูลตัวอย่าง"
     ):
-
         st.write(
             "สร้างข้อมูล User 10 คน, "
             "Anime 10 เรื่อง และความสัมพันธ์ "
@@ -720,13 +668,10 @@ with tab_manage:
             "โหลด / อัปเดต Demo Data",
             use_container_width=True,
         ):
-
             seed_demo_data()
-
             st.success(
                 "โหลดข้อมูลเรียบร้อย"
             )
-
             st.rerun()
 
     anime_rows = search_anime("")
@@ -739,7 +684,6 @@ with tab_manage:
     with st.form(
         "watch_form"
     ):
-
         st.markdown(
             "### 📺 เพิ่ม Anime ที่ดูแล้ว"
         )
@@ -747,8 +691,7 @@ with tab_manage:
         a = st.selectbox(
             "Anime",
             list(amap),
-            format_func=lambda x:
-                f"{x} — {amap[x]}",
+            format_func=lambda x: f"{x} — {amap[x]}",
         )
 
         d = st.date_input(
@@ -759,7 +702,6 @@ with tab_manage:
             "บันทึก WATCHED",
             use_container_width=True,
         ):
-
             record_watched(
                 uid,
                 a,
