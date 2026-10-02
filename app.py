@@ -14,22 +14,23 @@ import pandas as pd
 import streamlit as st
 
 # =========================================================
-# Anime image URLs
+# Anime image URLs (Default)
 # =========================================================
-ANIME_IMAGES = {
-    "A001": "https://cdn.myanimelist.net/images/anime/1244/138851l.jpg",  # One Piece
-    "A002": "https://cdn.myanimelist.net/images/anime/1141/142503l.jpg",  # Naruto
-    "A003": "https://cdn.myanimelist.net/images/anime/1286/99889l.jpg",  # Demon Slayer
-    "A004": "https://cdn.myanimelist.net/images/anime/10/47347l.jpg",  # Attack on Titan
-    "A005": (
-        "https://huggingface.co/datasets/deepghs/fancaps_animes/resolve/main/images/40748__jujutsu_kaisen.jpg"
-    ),  # Jujutsu Kaisen
-    "A006": "https://cdn.myanimelist.net/images/anime/10/78745l.jpg",  # My Hero Academia
-    "A007": "https://cdn.myanimelist.net/images/anime/1079/138100l.jpg",  # Death Note
-    "A008": "https://cdn.myanimelist.net/images/anime/7/76014l.jpg",  # Haikyuu!!
-    "A009": "https://cdn.myanimelist.net/images/anime/12/76049l.jpg",  # One Punch Man
-    "A010": "https://cdn.myanimelist.net/images/anime/6/73245l.jpg",  # Dragon Ball
-}
+if "ANIME_IMAGES" not in st.session_state:
+    st.session_state["ANIME_IMAGES"] = {
+        "A001": "https://cdn.myanimelist.net/images/anime/1244/138851l.jpg",  # One Piece
+        "A002": "https://cdn.myanimelist.net/images/anime/1141/142503l.jpg",  # Naruto
+        "A003": "https://cdn.myanimelist.net/images/anime/1286/99889l.jpg",  # Demon Slayer
+        "A004": "https://cdn.myanimelist.net/images/anime/10/47347l.jpg",  # Attack on Titan
+        "A005": "https://huggingface.co/datasets/deepghs/fancaps_animes/resolve/main/images/40748__jujutsu_kaisen.jpg",  # Jujutsu Kaisen
+        "A006": "https://cdn.myanimelist.net/images/anime/10/78745l.jpg",  # My Hero Academia
+        "A007": "https://cdn.myanimelist.net/images/anime/1079/138100l.jpg",  # Death Note
+        "A008": "https://cdn.myanimelist.net/images/anime/7/76014l.jpg",  # Haikyuu!!
+        "A009": "https://cdn.myanimelist.net/images/anime/12/76049l.jpg",  # One Punch Man
+        "A010": "https://cdn.myanimelist.net/images/anime/6/73245l.jpg",  # Dragon Ball
+    }
+
+ANIME_IMAGES = st.session_state["ANIME_IMAGES"]
 
 # =========================================================
 # Page Config
@@ -387,7 +388,9 @@ with tab_rec:
                 anime_id = str(row["anime_id"])
                 title = str(row["title"])
                 score = row["score"]
-                image_url = ANIME_IMAGES.get(anime_id)
+                
+                # ดึงรูปจาก ANIME_IMAGES หรือจากข้อมูลใน row
+                image_url = ANIME_IMAGES.get(anime_id) or row.get("image_url")
 
                 friends = row.get("watched_by_friends", [])
                 if friends is None:
@@ -409,7 +412,7 @@ with tab_rec:
                 else:
                     image_html = (
                         '<div class="anime-card-image" style="display:flex;'
-                        'align-items:center;justify-content:center;">'
+                        'align-items:center;justify-content:center;background:#1f2937;color:#9ca3af;">'
                         "🎌 ไม่พบรูป Anime</div>"
                     )
 
@@ -464,7 +467,7 @@ with tab_rec:
 # Anime Graph
 # =========================================================
 with tab_graph:
-    st.subheader("🕸️️ กราฟความสัมพันธ์ของคุณ")
+    st.subheader("🕸 กราฟความสัมพันธ์ของคุณ")
 
     st.caption(
         "โหนดสีม่วง = User · "
@@ -688,7 +691,7 @@ with tab_manage:
             "🎬🗑 ลบ Anime ถาวร",
         ])
 
-        # --- 1. เพิ่ม User ใหม่ + เชื่อม FRIEND_OF + เชื่อม WATCHED ---
+        # --- 1. เพิ่ม User ใหม่ ---
         with tab_add_user:
             with st.form("add_user_form"):
                 st.markdown("#### 👤 1. ข้อมูลผู้ใช้ใหม่")
@@ -715,14 +718,12 @@ with tab_manage:
                     clean_uname = new_uname.strip()
 
                     if clean_uid and clean_uname:
-                        # 1. สร้าง Node User
                         q_create_user = """
                         MERGE (u:User {user_id: $uid})
                         SET u.name = $name
                         """
                         query(q_create_user, {"uid": clean_uid, "name": clean_uname}, write=True)
 
-                        # 2. สร้างความสัมพันธ์ FRIEND_OF แบบสองทาง
                         for fid in selected_friends:
                             q_friend = """
                             MATCH (u1:User {user_id: $uid})
@@ -732,11 +733,10 @@ with tab_manage:
                             """
                             query(q_friend, {"uid": clean_uid, "fid": fid}, write=True)
 
-                        # 3. สร้างความสัมพันธ์ WATCHED
                         for aid in selected_animes:
                             record_watched(clean_uid, aid, str(watch_date))
 
-                        st.success(f"เพิ่มผู้ใช้ {clean_uname} ({clean_uid}) และสร้างความสัมพันธ์เรียบร้อย!")
+                        st.success(f"เพิ่มผู้ใช้ {clean_uname} ({clean_uid}) เรียบร้อย!")
                         st.rerun()
                     else:
                         st.warning("กรุณากรอก User ID และ ชื่อผู้ใช้งาน ให้ครบถ้วน")
@@ -752,7 +752,6 @@ with tab_manage:
                 )
 
                 if st.button("🗑️ ยืนยันลบ User ถาวร", type="primary", use_container_width=True, key="btn_del_user"):
-                    # ลบ Node User พร้อมตัดความสัมพันธ์ทั้งหมด (DETACH DELETE)
                     q_del_user = "MATCH (u:User {user_id: $uid}) DETACH DELETE u"
                     query(q_del_user, {"uid": del_user_target}, write=True)
                     st.success(f"ลบผู้ใช้ {names[del_user_target]} ({del_user_target}) ออกจากระบบแล้ว!")
@@ -760,27 +759,46 @@ with tab_manage:
             else:
                 st.info("ไม่มีรายการ User ให้ลบ")
 
-        # --- 3. เพิ่ม Node Anime ---
+        # --- 3. เพิ่ม Node Anime (เพิ่มช่องกรอก URL รูปภาพ) ---
         with tab_add_node:
             with st.form("add_anime_node_purple"):
                 new_aid = st.text_input("Anime ID (เช่น A011):")
                 new_title = st.text_input("ชื่อเรื่อง Anime:")
+                new_img_url = st.text_input(
+                    "URL รูปภาพหน้าปก (Image URL):", 
+                    placeholder="https://cdn.myanimelist.net/images/anime/...jpg"
+                )
 
                 if st.form_submit_button(
                     "➕ บันทึกอนิเมะเข้า Neo4j", use_container_width=True
                 ):
-                    if new_aid.strip() and new_title.strip():
+                    clean_aid = new_aid.strip()
+                    clean_title = new_title.strip()
+                    clean_img_url = new_img_url.strip()
+
+                    if clean_aid and clean_title:
+                        # บันทึกลงใน Neo4j
                         q_add = """
                         MERGE (a:Anime {anime_id: $aid})
-                        SET a.title = $title
+                        SET a.title = $title,
+                            a.image_url = $img_url
                         """
                         query(
                             q_add,
-                            {"aid": new_aid.strip(), "title": new_title.strip()},
+                            {
+                                "aid": clean_aid, 
+                                "title": clean_title, 
+                                "img_url": clean_img_url
+                            },
                             write=True,
                         )
+
+                        # อัปเดตใน Dictionary รูปภาพ
+                        if clean_img_url:
+                            st.session_state["ANIME_IMAGES"][clean_aid] = clean_img_url
+
                         st.success(
-                            f"เพิ่มอนิเมะ '{new_title}' ({new_aid}) เรียบร้อยแล้ว!"
+                            f"เพิ่มอนิเมะ '{clean_title}' ({clean_aid}) เรียบร้อยแล้ว!"
                         )
                         st.rerun()
                     else:
@@ -797,12 +815,16 @@ with tab_manage:
                 )
 
                 if st.button(
-                    "🗑️ ยืนยันลบ Anime Node",
+                    "🗑️️ ยืนยันลบ Anime Node",
                     type="primary",
                     use_container_width=True,
                 ):
                     q_del = "MATCH (a:Anime {anime_id: $aid}) DETACH DELETE a"
                     query(q_del, {"aid": del_target}, write=True)
+                    
+                    # ลบออกจาก Session State รูปภาพด้วย
+                    st.session_state["ANIME_IMAGES"].pop(del_target, None)
+
                     st.success(f"ลบ Anime {del_target} ออกจากระบบแล้ว!")
                     st.rerun()
             else:
